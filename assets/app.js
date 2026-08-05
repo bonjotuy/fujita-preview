@@ -56,6 +56,24 @@
     return String(raw || '').split(/[\s,、]+/).map(driveId).filter(Boolean);
   }
 
+  /* E列の1つぶんを、再生の仕方まで含めて解釈する。
+     ・ドライブの共有リンク → ドライブのプレイヤー（操作パネルが出る）
+     ・videos/p001.mp4 のような書き方 → サイトに置いた動画をそのまま再生（パネルなし） */
+  function mediaItems(raw) {
+    return String(raw || '').split(/[\s,、]+/).filter(Boolean).map(function (s) {
+      if (/^https?:/i.test(s) && !/drive\.google\.com/i.test(s)) {
+        return { kind: /\.(jpe?g|png|webp|gif)$/i.test(s) ? 'img' : 'file', src: s };
+      }
+      if (/\.(mp4|m4v|mov|webm)$/i.test(s)) return { kind: 'file', src: rel(s) };
+      if (/\.(jpe?g|png|webp|gif)$/i.test(s)) return { kind: 'img', src: rel(s) };
+      var id = driveId(s);
+      return id ? { kind: 'drive', id: id } : null;
+    }).filter(Boolean);
+  }
+
+  // ページは1階層下（/fujita-xxxx/）にあるので、サイト直下からの相対にする
+  function rel(path) { return '../' + String(path).replace(/^\.?\//, ''); }
+
   function thumbUrl(id) { return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1000'; }
   function embedUrl(id) { return 'https://drive.google.com/file/d/' + id + '/preview'; }
 
@@ -287,18 +305,18 @@
      フィードで投稿を見たときの形。動画の上には何も重ねない。 */
 
   function igScreen(p) {
-    var ids = mediaIds(p.videoUrl);
+    var items = mediaItems(p.videoUrl);
     var acc = ACCOUNTS[p.account] || {};
     var isFeed = p.type === 'feed';
     var ar = isFeed ? 'ar45' : 'ar916';
-    var multi = isFeed && ids.length > 1;
+    var multi = isFeed && items.length > 1;
 
-    var frames = !ids.length
+    var frames = !items.length
       ? '<div class="frame blank">' + (isFeed ? '画像' : '動画') + 'URLが未設定です</div>'
       : (multi
-          ? '<div class="carousel">' + ids.map(frameHtml).join('') + '</div>' +
-            '<div class="p-count">1/' + ids.length + '</div>'
-          : frameHtml(ids[0]));
+          ? '<div class="carousel">' + items.map(frameHtml).join('') + '</div>' +
+            '<div class="p-count">1/' + items.length + '</div>'
+          : frameHtml(items[0]));
 
     return '<div class="postview">' +
         '<div class="p-head">' + avatarsHtml(p) +
@@ -311,7 +329,7 @@
         '</div>' +
         '<div class="p-media ' + ar + '">' + frames + '</div>' +
         (multi
-          ? '<div class="dots">' + ids.map(function (_, i) {
+          ? '<div class="dots">' + items.map(function (_, i) {
               return '<i class="' + (i === 0 ? 'on' : '') + '"></i>';
             }).join('') + '</div>'
           : '') +
@@ -325,9 +343,18 @@
       '</div>' + igNav();
   }
 
-  function frameHtml(id) {
-    return '<div class="frame" data-act="play" data-mid="' + esc(id) + '">' +
-      '<img src="' + thumbUrl(id) + '" alt="" loading="lazy">' +
+  function frameHtml(item) {
+    if (item.kind === 'img') {
+      return '<div class="frame"><img src="' + esc(item.src) + '" alt="" loading="lazy"></div>';
+    }
+    if (item.kind === 'file') {
+      return '<div class="frame" data-act="playfile">' +
+        '<video src="' + esc(item.src) + '" playsinline preload="metadata" loop></video>' +
+        '<div class="tap"><span class="pb">' + I.play + '</span></div>' +
+      '</div>';
+    }
+    return '<div class="frame" data-act="play" data-mid="' + esc(item.id) + '">' +
+      '<img src="' + thumbUrl(item.id) + '" alt="" loading="lazy">' +
       '<div class="tap"><span class="pb">' + I.play + '</span></div>' +
     '</div>';
   }
@@ -345,7 +372,7 @@
   /* YouTube（ショート／動画）— 視聴画面の形 */
 
   function ytScreen(p) {
-    var ids = mediaIds(p.videoUrl);
+    var items = mediaItems(p.videoUrl);
     var acc = ACCOUNTS[p.account] || {};
     var name = acc.handle || C.clientName;
     var title = String(p.caption || '').split('\n')[0] || '(タイトル未設定)';
@@ -353,7 +380,7 @@
 
     return '<div class="postview">' +
         '<div class="p-media ' + ar + '">' +
-          (ids.length ? frameHtml(ids[0]) : '<div class="frame blank">動画URLが未設定です</div>') +
+          (items.length ? frameHtml(items[0]) : '<div class="frame blank">動画URLが未設定です</div>') +
         '</div>' +
         '<button class="yt-title" data-act="sheet">' +
           '<span class="txt">' + esc(title) + '</span>' +
@@ -619,6 +646,15 @@
       t.innerHTML = '<iframe src="' + embedUrl(t.getAttribute('data-mid')) +
         '" allow="autoplay; fullscreen" allowfullscreen></iframe>';
       t.removeAttribute('data-act');
+      return;
+    }
+
+    // サイトに置いた動画。タップで再生／一時停止（操作パネルは出さない）
+    if (act === 'playfile') {
+      var v = t.querySelector('video');
+      if (!v) return;
+      if (v.paused) { v.play(); t.classList.add('playing'); }
+      else { v.pause(); t.classList.remove('playing'); }
       return;
     }
 

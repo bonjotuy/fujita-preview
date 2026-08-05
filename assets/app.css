@@ -242,7 +242,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .p-media.ar169 { flex: 0 0 auto; width: 100%; aspect-ratio: 16 / 9; }
 
 .p-media .frame { position: absolute; inset: 0; overflow: hidden; background: #000; }
-.p-media .frame img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.p-media .frame img,
+.p-media .frame video { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; }
 .p-media .frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
 .p-media .frame .tap {
@@ -263,6 +264,9 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 }
 
 .p-media .frame .tap svg { width: 26px; height: 26px; margin-left: 2px; }
+
+/* 再生中は再生マークを消す */
+.p-media .frame.playing .tap { opacity: 0; transition: opacity .2s; }
 
 .p-media .frame.blank {
   display: grid;
