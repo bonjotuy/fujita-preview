@@ -209,26 +209,42 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 
 .stage .box img,
 .stage .box video { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; }
-.stage .box iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
+/* ドライブのプレイヤーは中身を触れないので、大きめに描画してから縮める。
+   動画の見える大きさは変わらないまま、ボタンや操作バーだけが小さくなる。 */
+.stage .box iframe {
+  position: absolute;
+  top: -30%;
+  left: -30%;
+  width: 160%;
+  height: 160%;
+  border: 0;
+  transform: scale(.625);
+  transform-origin: center center;
+}
+
+/* こちら側の再生ボタン。映像の真ん中を避けて左下に置く */
 .stage .tap {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: flex-end;
+  padding: 14px;
   pointer-events: none;
 }
 
 .stage .tap .pb {
-  width: 62px;
-  height: 62px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, .5);
+  background: rgba(0, 0, 0, .55);
+  backdrop-filter: blur(4px);
   display: grid;
   place-items: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .4);
 }
 
-.stage .tap svg { width: 28px; height: 28px; margin-left: 3px; }
+.stage .tap svg { width: 22px; height: 22px; margin-left: 3px; }
 .stage .box.playing .tap { opacity: 0; transition: opacity .2s; }
 
 .stage .box.blank {
