@@ -77,6 +77,12 @@
   function thumbUrl(id) { return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1000'; }
   function embedUrl(id) { return 'https://drive.google.com/file/d/' + id + '/preview'; }
 
+  // ドライブの動画そのもの。プレイヤーを通さないので操作パネルが出ない。
+  // 「リンクを知っている全員」で共有されていることが前提。
+  function driveFileUrl(id) {
+    return 'https://drive.usercontent.google.com/download?id=' + id + '&export=download';
+  }
+
   function parseWhen(s) {
     return String(s || '').match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?/);
   }
@@ -353,10 +359,22 @@
         '<div class="tap"><span class="pb">' + I.play + '</span></div>' +
       '</div>';
     }
-    return '<div class="frame" data-act="play" data-mid="' + esc(item.id) + '">' +
-      '<img src="' + thumbUrl(item.id) + '" alt="" loading="lazy">' +
+    // ドライブの動画。まず素の動画として再生を試し、ダメならドライブのプレイヤーに切り替える
+    return '<div class="frame" data-act="playfile" data-fallback="' + esc(item.id) + '">' +
+      '<video src="' + driveFileUrl(item.id) + '" poster="' + thumbUrl(item.id) + '"' +
+        ' playsinline preload="metadata" loop></video>' +
       '<div class="tap"><span class="pb">' + I.play + '</span></div>' +
     '</div>';
+  }
+
+  // 素の動画として再生できなかったとき（形式が非対応・容量が大きすぎる等）の逃げ道
+  function fallbackToDrive(frame) {
+    var id = frame && frame.getAttribute('data-fallback');
+    if (!id) return;
+    frame.innerHTML = '<iframe src="' + embedUrl(id) +
+      '" allow="autoplay; fullscreen" allowfullscreen></iframe>';
+    frame.removeAttribute('data-act');
+    frame.removeAttribute('data-fallback');
   }
 
   function igNav() {
@@ -649,12 +667,14 @@
       return;
     }
 
-    // サイトに置いた動画。タップで再生／一時停止（操作パネルは出さない）
+    // 素の動画。タップで再生／一時停止（操作パネルは出さない）
     if (act === 'playfile') {
       var v = t.querySelector('video');
       if (!v) return;
-      if (v.paused) { v.play(); t.classList.add('playing'); }
-      else { v.pause(); t.classList.remove('playing'); }
+      if (!v.paused) { v.pause(); t.classList.remove('playing'); return; }
+      var pr = v.play();
+      t.classList.add('playing');
+      if (pr && pr.catch) pr.catch(function () { fallbackToDrive(t); });
       return;
     }
 
@@ -706,6 +726,13 @@
       return;
     }
   });
+
+  // 動画の読み込みに失敗したら、ドライブのプレイヤーに切り替える（errorは伝播しないので捕捉する）
+  root.addEventListener('error', function (e) {
+    var v = e.target;
+    if (!v || v.tagName !== 'VIDEO') return;
+    fallbackToDrive(v.closest('.frame'));
+  }, true);
 
   function refreshActbar(id) {
     var post = postById(id);
