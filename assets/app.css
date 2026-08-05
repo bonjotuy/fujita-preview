@@ -228,29 +228,21 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 
 /* 映像 */
 
+/* 動画・画像の置き場。枠を比率で作らず、余った領域いっぱいに置いて
+   中の映像を contain で収める。端末による計算のブレが出ないやり方。 */
 .p-media {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: #000;
   overflow: hidden;
-  position: relative;
 }
 
-.p-media .frame {
-  position: relative;
-  overflow: hidden;
-  background: #000;
-  flex: 0 0 auto;
-}
+/* YouTubeの通常動画だけ、上に16:9で固定して下に情報を並べる */
+.p-media.ar169 { flex: 0 0 auto; width: 100%; aspect-ratio: 16 / 9; }
 
-.p-media.ar916 .frame { height: 100%; aspect-ratio: 9 / 16; max-width: 100%; }
-.p-media.ar45  .frame { width: 100%; aspect-ratio: 4 / 5;  max-height: 100%; }
-.p-media.ar169 .frame { width: 100%; aspect-ratio: 16 / 9; max-height: 100%; }
-
-.p-media .frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.p-media .frame { position: absolute; inset: 0; overflow: hidden; background: #000; }
+.p-media .frame img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .p-media .frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
 .p-media .frame .tap {
@@ -258,33 +250,48 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgba(0, 0, 0, .12);
+  pointer-events: none;
 }
 
-.p-media .frame .tap svg { width: 54px; height: 54px; filter: drop-shadow(0 2px 8px rgba(0, 0, 0, .6)); }
+.p-media .frame .tap .pb {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .42);
+  display: grid;
+  place-items: center;
+}
+
+.p-media .frame .tap svg { width: 26px; height: 26px; margin-left: 2px; }
 
 .p-media .frame.blank {
-  width: 100%;
-  height: 100%;
   display: grid;
   place-items: center;
   color: #6b6b6b;
   font-size: 13px;
   background: #101010;
+  padding: 16px;
+  text-align: center;
 }
 
 .carousel {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 0;
   display: flex;
-  align-items: center;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
 }
 
 .carousel::-webkit-scrollbar { display: none; }
-.carousel .frame { flex: 0 0 100% !important; scroll-snap-align: center; }
+
+.carousel .frame {
+  position: relative;
+  inset: auto;
+  flex: 0 0 100%;
+  height: 100%;
+  scroll-snap-align: center;
+}
 
 .p-count {
   position: absolute;

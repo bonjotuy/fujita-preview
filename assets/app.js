@@ -328,7 +328,7 @@
   function frameHtml(id) {
     return '<div class="frame" data-act="play" data-mid="' + esc(id) + '">' +
       '<img src="' + thumbUrl(id) + '" alt="" loading="lazy">' +
-      '<div class="tap">' + I.play + '</div>' +
+      '<div class="tap"><span class="pb">' + I.play + '</span></div>' +
     '</div>';
   }
 
