@@ -197,12 +197,15 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   background: #000;
 }
 
-/* 高さから幅を出す。比率計算をブラウザに任せないので端末差が出ない */
-.stage .box { position: relative; overflow: hidden; background: #000; max-width: 100%; }
+/* 幅いっぱいにして、高さを幅から計算する。
+   枠を細くするとドライブのプレイヤーが最低幅で収まらず、右側が切れてしまうため。
+   比率計算はブラウザ任せにせず calc で出すので端末差も出ない。 */
+.stage { --w: calc(min(100vw, 480px) - 26px); }
+.stage .box { position: relative; overflow: hidden; background: #000; width: 100%; }
 
-.stage.ar916 .box { height: 56vh; max-height: 540px; width: calc(56vh * 9 / 16); }
-.stage.ar45  .box { height: 50vh; max-height: 470px; width: calc(50vh * 4 / 5); }
-.stage.ar169 .box { width: 100%; height: calc(min(100vw, 480px) * 9 / 16); }
+.stage.ar916 .box { height: calc(var(--w) * 16 / 9); }
+.stage.ar45  .box { height: calc(var(--w) * 5 / 4); }
+.stage.ar169 .box { height: calc(var(--w) * 9 / 16); }
 
 .stage .box img,
 .stage .box video { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; }
