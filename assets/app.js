@@ -121,6 +121,10 @@
 
   var PLAY = '<svg viewBox="0 0 24 24" fill="#fff"><path d="M8 5.5v13l11-6.5z"/></svg>';
 
+  var EXT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" ' +
+    'stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/>' +
+    '<path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+
   /* ---------- 通信 ---------- */
 
   function load() {
@@ -298,14 +302,22 @@
         '</div>' +
         '<div class="dots" style="background:#000">' + items.map(function (_, i) {
           return '<i class="' + (i === 0 ? 'on' : '') + '"></i>';
-        }).join('') + '</div>';
+        }).join('') + '</div>' + underHtml(items);
     }
 
-    return '<div class="stage ' + ar + '">' + boxHtml(items[0]) + '</div>' +
-      (items[0].kind === 'drive'
-        ? '<div class="hint-play">再生ボタンを押すと動画が始まります。<br>' +
-          '数秒だけ操作パネルが重なりますが、待つと消えます。</div>'
-        : '');
+    return '<div class="stage ' + ar + '">' + boxHtml(items[0]) + '</div>' + underHtml(items);
+  }
+
+  // 動画の下。使い方の案内と「ドライブで見る」
+  function underHtml(items) {
+    var first = items.filter(function (i) { return i.kind === 'drive'; })[0];
+    if (!first) return '';
+    return '<div class="under">' +
+      '<div class="hint-play">再生ボタンを押すと動画が始まります。<br>' +
+        '数秒だけ操作パネルが重なりますが、<b>触らずに待つと消えます。</b></div>' +
+      '<a class="watch" href="https://drive.google.com/file/d/' + esc(first.id) + '/view"' +
+        ' target="_blank" rel="noopener">ドライブで見る ' + EXT + '</a>' +
+    '</div>';
   }
 
   function boxHtml(item) {

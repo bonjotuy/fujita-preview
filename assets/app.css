@@ -257,12 +257,33 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   font-size: 14px;
 }
 
+.under { padding: 12px 16px 0; text-align: center; }
+
 .hint-play {
-  padding: 8px 16px 0;
-  font-size: 12px;
+  font-size: 12.5px;
+  line-height: 1.6;
   color: var(--muted);
-  text-align: center;
 }
+
+.hint-play b { color: var(--text); font-weight: 700; }
+
+.watch {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 11px;
+  padding: 11px 20px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--card);
+  color: var(--blue);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.watch:active { background: #eef5ff; }
+.watch svg { width: 16px; height: 16px; }
 
 /* 複数枚 */
 
