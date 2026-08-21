@@ -75,6 +75,40 @@
       hashtags: '#ステンレス #気仙沼 #ものづくり #町工場',
       status: '確認待ち', collab: null, music: '', place: '',
       logs: []
+    },
+    {
+      // M列にドキュメントURLを入れたとき、GASがこの形に組み直して返す
+      id: 'p007', account: 'note', type: 'note',
+      scheduledAt: '2026-09-01 08:00',
+      videoUrl: '_dev/cover-sample.jpg',
+      fromDoc: true,
+      caption: '溶接跡を消さない、という選び方\n\n' +
+        'ステンレスの溶接跡は、磨けば消せます。\n' +
+        'それでも残すことがあるのは、そこが手の跡だからです。\n\n' +
+        '[[img:1AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA]]\n\n' +
+        '## 消す仕上げと、残す仕上げ\n\n' +
+        'お客さまの用途によって、**仕上げの方針が変わります。**\n\n' +
+        '- 食品を扱う現場 → 洗いやすさ優先で鏡面まで磨く\n' +
+        '- インテリア → 溶接跡を意匠として残す\n\n' +
+        '[[img:1BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB]]\n\n' +
+        '> どちらが上ということではなくて、\n' +
+        '> どこで使われるかで決まります。\n\n' +
+        '### 迷ったときは相談してください\n\n' +
+        '現物を見ながら決めたほうが早いことが多いです。',
+      hashtags: '#ステンレス #溶接 #仕上げ',
+      status: '確認待ち', collab: null, music: '', place: '',
+      logs: []
+    },
+    {
+      // ドキュメントが読めなかったとき（共有設定のミスなど）
+      id: 'p008', account: 'note', type: 'note',
+      scheduledAt: '2026-09-05 08:00',
+      videoUrl: '',
+      docError: 'ドキュメントのURLが読み取れません',
+      caption: '（F列の予備テキスト）\n\nドキュメントが読めないときは、F列に入っている文章がそのまま出ます。',
+      hashtags: '',
+      status: '確認待ち', collab: null, music: '', place: '',
+      logs: []
     }
   ];
 

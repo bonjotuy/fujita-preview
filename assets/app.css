@@ -371,6 +371,29 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .note-body li { margin-bottom: .35em; }
 .note-body hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
 .note-body a { color: var(--blue); overflow-wrap: anywhere; }
+.note-body .doc-img { margin: 1.5em 0; }
+
+.note-body .doc-img img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  background: #eceff3;
+}
+
+.doc-err {
+  margin-bottom: 14px;
+  padding: 11px 13px;
+  border-radius: 10px;
+  background: var(--warn-bg);
+  color: var(--warn);
+  font-size: 13px;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.doc-err span { display: block; margin-top: 4px; font-weight: 400; opacity: .8; overflow-wrap: anywhere; }
+
 .note-body > :first-child { margin-top: 0; }
 .note-body > :last-child { margin-bottom: 0; }
 

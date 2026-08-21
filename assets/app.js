@@ -383,12 +383,17 @@
     var lines = String(p.caption || '').split('\n');
     var title = (lines[0] || '').trim();
     var body = lines.slice(1).join('\n').replace(/^\n+/, '');
-    var n = body.replace(/\s/g, '').length;
+    var n = body.replace(/\[\[img:[^\]]*\]\]/g, '').replace(/\s/g, '').length;
 
     return '<div class="sec">' +
+      (p.docError
+        ? '<div class="doc-err">ドキュメントを読み込めませんでした。共有設定を確認してください。<br>' +
+            '<span>' + esc(p.docError) + '</span></div>'
+        : '') +
       '<h3>タイトルと本文</h3>' +
       '<div class="note-title">' + esc(title || '(タイトル未設定)') + '</div>' +
-      '<div class="note-meta">本文 約' + n + '文字</div>' +
+      '<div class="note-meta">本文 約' + n + '文字' +
+        (p.fromDoc ? '　・　ドキュメントから読み込み' : '') + '</div>' +
       '<div class="note-body">' + (n ? mdLite(body) : '<p class="empty">本文が未入力です。</p>') + '</div>' +
       (p.hashtags ? '<div class="tags">' + esc(p.hashtags) + '</div>' : '') +
     '</div>';
@@ -417,6 +422,12 @@
 
       if (/^(-{3,}|\*{3,}|_{3,}|―{3,}|—{3,})$/.test(t)) {
         flushAll(); out.push('<hr>'); return;
+      }
+      // ドキュメントから拾った本文中の画像
+      if ((m = t.match(/^\[\[img:([-\w]{10,})\]\]$/))) {
+        flushAll();
+        out.push('<figure class="doc-img"><img src="' + thumbUrl(m[1]) + '" alt="" loading="lazy"></figure>');
+        return;
       }
       if ((m = t.match(/^(#{1,6})\s*(.+)$/))) {
         flushAll();
