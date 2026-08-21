@@ -381,6 +381,28 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   background: #eceff3;
 }
 
+/* プレビューへのリンク */
+
+.sec.preview { text-align: center; padding-top: 20px; }
+
+.sec.preview .lead {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin-bottom: 13px;
+}
+
+.watch.big {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  margin-top: 0;
+  padding: 15px 20px;
+  font-size: 15px;
+  border-color: #b9d4ff;
+  background: #f2f8ff;
+}
+
 .doc-err {
   margin-bottom: 14px;
   padding: 11px 13px;

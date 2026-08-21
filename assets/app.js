@@ -267,6 +267,7 @@
       headHtml(p) +
       mediaHtml(p) +
       bodyHtml(p) +
+      previewHtml(p) +
       logsHtml(p) +
       decideHtml(p) +
     '</article>';
@@ -385,17 +386,40 @@
     var body = lines.slice(1).join('\n').replace(/^\n+/, '');
     var n = body.replace(/\[\[img:[^\]]*\]\]/g, '').replace(/\s/g, '').length;
 
+    // 本文がなく、プレビューURLだけあるとき。本文欄は出さずにボタンへ寄せる
+    var linkOnly = !n && !!p.previewUrl;
+
     return '<div class="sec">' +
       (p.docError
         ? '<div class="doc-err">ドキュメントを読み込めませんでした。共有設定を確認してください。<br>' +
             '<span>' + esc(p.docError) + '</span></div>'
         : '') +
-      '<h3>タイトルと本文</h3>' +
+      '<h3>' + (linkOnly ? '記事' : 'タイトルと本文') + '</h3>' +
       '<div class="note-title">' + esc(title || '(タイトル未設定)') + '</div>' +
-      '<div class="note-meta">本文 約' + n + '文字' +
-        (p.fromDoc ? '　・　ドキュメントから読み込み' : '') + '</div>' +
-      '<div class="note-body">' + (n ? mdLite(body) : '<p class="empty">本文が未入力です。</p>') + '</div>' +
+      (linkOnly ? '' :
+        '<div class="note-meta">本文 約' + n + '文字' +
+          (p.fromDoc ? '　・　ドキュメントから読み込み' : '') + '</div>' +
+        '<div class="note-body">' + (n ? mdLite(body) : '<p class="empty">本文が未入力です。</p>') + '</div>') +
       (p.hashtags ? '<div class="tags">' + esc(p.hashtags) + '</div>' : '') +
+    '</div>';
+  }
+
+
+  /* N列のプレビューURL。noteは枠内に埋め込めない（note側が拒否する）ので、
+     別タブで開いてもらい、戻ってきて判定する流れにしている。 */
+  function previewHtml(p) {
+    if (!p.previewUrl) return '';
+
+    var lines = String(p.caption || '').split('\n');
+    var hasBody = lines.slice(1).join('').replace(/\[\[img:[^\]]*\]\]/g, '').trim().length > 0;
+
+    return '<div class="sec preview">' +
+      (hasBody
+        ? '<div class="lead">実際の見た目はこちらで確認できます。</div>'
+        : '<div class="lead">記事の本文は note のプレビューで確認してください。<br>' +
+            '読み終えたらこの画面に戻って、下のボタンで判定をお願いします。</div>') +
+      '<a class="watch big" href="' + esc(p.previewUrl) + '" target="_blank" rel="noopener">' +
+        'noteでプレビューを見る ' + EXT + '</a>' +
     '</div>';
   }
 

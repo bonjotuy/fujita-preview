@@ -100,6 +100,33 @@
       logs: []
     },
     {
+      // N列にnoteプレビューURLだけを入れたとき（いまの基本の流れ）
+      id: 'n002', account: 'note', type: 'note',
+      scheduledAt: '2026-09-08 08:00',
+      videoUrl: '',
+      previewUrl: 'https://note.com/preview/nxxxxxxxxxxxx?prev_access_key=xxxxxxxx',
+      caption: 'Project#6 手すり｜街に残る仕事のつくりかた',
+      hashtags: '',
+      status: '確認待ち', collab: null, music: '', place: '',
+      logs: []
+    },
+    {
+      // 本文もプレビューURLも両方あるとき
+      id: 'n003', account: 'note', type: 'note',
+      scheduledAt: '2026-09-12 08:00',
+      videoUrl: '_dev/cover-sample.jpg',
+      previewUrl: 'https://note.com/preview/nyyyyyyyyyyyy?prev_access_key=yyyyyyyy',
+      fromDoc: true,
+      caption: 'ステンレスの手すりが街に残るということ\n\n' +
+        '手すりは、毎日たくさんの人がさわります。\n' +
+        'だから錆びない素材を選びます。\n\n' +
+        '## 20年先を見て決める\n\n' +
+        '一度つけたら、簡単には替えられません。',
+      hashtags: '#ステンレス #手すり',
+      status: '確認待ち', collab: null, music: '', place: '',
+      logs: []
+    },
+    {
       // ドキュメントが読めなかったとき（共有設定のミスなど）
       id: 'p008', account: 'note', type: 'note',
       scheduledAt: '2026-09-05 08:00',
