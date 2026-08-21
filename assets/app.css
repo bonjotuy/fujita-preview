@@ -185,6 +185,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .badge.ok   { background: var(--ok-bg);   color: var(--ok); }
 .badge.fix  { background: var(--warn-bg); color: var(--warn); }
 .badge.kind { background: #e8f0fe; color: #1a56b8; }
+.badge.kind.note { background: #e3f5f0; color: #0b7c6a; }
 .badge.collab { background: #f3e8fd; color: #6b30b8; }
 
 .when { width: 100%; font-size: 13px; color: var(--muted); }
@@ -206,6 +207,13 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .stage.ar916 .box { height: calc(var(--w) * 16 / 9); }
 .stage.ar45  .box { height: calc(var(--w) * 5 / 4); }
 .stage.ar169 .box { height: calc(var(--w) * 9 / 16); }
+/* noteの見出し画像。実寸1280×670に合わせる */
+.stage.ar1911 .box { height: calc(var(--w) * 670 / 1280); }
+
+/* 見出し画像は本番と同じく切り抜いて見せる（contain だと切れ方が分からない） */
+.stage.cover { background: #eceff3; }
+.stage.cover .box { background: #eceff3; }
+.stage.cover .box img { object-fit: cover; background: #eceff3; }
 
 .stage .box img,
 .stage .box video { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; }
@@ -315,6 +323,56 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 }
 
 .yt-title { font-size: 17px; font-weight: 700; line-height: 1.5; margin-bottom: 10px; }
+
+/* ---------- note記事 ---------- */
+
+.note-title {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: .01em;
+  margin-bottom: 6px;
+  overflow-wrap: anywhere;
+}
+
+.note-meta { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+
+.note-body {
+  font-size: 15.5px;
+  line-height: 1.95;
+  overflow-wrap: anywhere;
+}
+
+.note-body p { margin: 0 0 1.25em; }
+.note-body p.empty { color: var(--muted); }
+
+.note-body .nh2 {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.55;
+  margin: 1.9em 0 .7em;
+}
+
+.note-body .nh3 {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.55;
+  margin: 1.6em 0 .6em;
+}
+
+.note-body blockquote {
+  margin: 0 0 1.25em;
+  padding: 2px 0 2px 14px;
+  border-left: 3px solid #d6d6dd;
+  color: var(--muted);
+}
+
+.note-body ul { margin: 0 0 1.25em; padding-left: 1.35em; }
+.note-body li { margin-bottom: .35em; }
+.note-body hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+.note-body a { color: var(--blue); overflow-wrap: anywhere; }
+.note-body > :first-child { margin-top: 0; }
+.note-body > :last-child { margin-bottom: 0; }
 
 .tags {
   margin-top: 12px;

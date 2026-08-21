@@ -12,7 +12,8 @@ const CONFIG = {
   accounts: [
     { key: 'project', label: 'プロジェクト', handle: 'fujita_stainless' },
     { key: 'product', label: 'プロダクト',   handle: 'kingplants_pot' },
-    { key: 'youtube', label: 'YouTube',    handle: '藤田鉄工所' }
+    { key: 'youtube', label: 'YouTube',    handle: '藤田鉄工所' },
+    { key: 'note',    label: 'note',       handle: '藤田鉄工所' }
   ],
 
   showAccountTabs: true,

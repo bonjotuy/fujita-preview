@@ -105,10 +105,11 @@
   function locked(p) { return reviewedByMe(p) && !state.redo[p.id]; }
   function postById(id) { return state.posts.filter(function (p) { return p.id === id; })[0]; }
   function isYt(p) { return p.type === 'short' || p.type === 'video' || p.account === 'youtube'; }
+  function isNote(p) { return p.type === 'note' || p.account === 'note'; }
 
   function typeLabel(p) {
     return ({ reel: 'リール', feed: 'フィード投稿', story: 'ストーリーズ',
-              short: 'YouTubeショート', video: 'YouTube動画' })[p.type] || p.type;
+              short: 'YouTubeショート', video: 'YouTube動画', note: 'note記事' })[p.type] || p.type;
   }
 
   function toast(msg) {
@@ -275,10 +276,10 @@
     var acc = ACCOUNTS[p.account] || {};
     return '<div class="head">' +
       statusBadge(p) +
-      '<span class="badge kind">' + esc(typeLabel(p)) + '</span>' +
-      (isCollab(p) ? '<span class="badge collab">共同投稿</span>' : '') +
+      '<span class="badge kind' + (isNote(p) ? ' note' : '') + '">' + esc(typeLabel(p)) + '</span>' +
+      (isCollab(p) && !isNote(p) ? '<span class="badge collab">共同投稿</span>' : '') +
       '<div class="when">' + (acc.label ? esc(acc.label) + '　・　' : '') +
-        '投稿予定 ' + whenLabel(p.scheduledAt) + '</div>' +
+        (isNote(p) ? '公開予定 ' : '投稿予定 ') + whenLabel(p.scheduledAt) + '</div>' +
     '</div>';
   }
 
@@ -290,6 +291,10 @@
 
   function mediaHtml(p) {
     var items = mediaItems(p.videoUrl);
+
+    // note記事は「見出し画像」。動画ではないので再生ボタンもドライブ案内も出さない。
+    if (isNote(p)) return coverHtml(items[0]);
+
     var ar = isYt(p) && p.type !== 'short' ? 'ar169' : (p.type === 'feed' ? 'ar45' : 'ar916');
 
     if (!items.length) {
@@ -320,6 +325,19 @@
     '</div>';
   }
 
+  /* note の見出し画像。実際のnoteと同じく横長（1280×670）に切り抜いて見せる。
+     ここで切れて見えるなら本番でも切れる、という状態にしておく。 */
+  function coverHtml(item) {
+    if (!item) return '';
+    var src = item.kind === 'drive' ? thumbUrl(item.id) : item.src;
+    return '<div class="stage ar1911 cover">' +
+      '<div class="box"><img src="' + esc(src) + '" alt="" loading="lazy"></div>' +
+    '</div>' +
+    '<div class="under"><div class="hint-play">' +
+      'noteの見出し画像は、この横長のかたちに切り抜かれて表示されます。' +
+    '</div></div>';
+  }
+
   function boxHtml(item) {
     if (item.kind === 'img') {
       return '<div class="box"><img src="' + esc(item.src) + '" alt="" loading="lazy"></div>';
@@ -337,6 +355,8 @@
   }
 
   function bodyHtml(p) {
+    if (isNote(p)) return noteBodyHtml(p);
+
     var text = String(p.caption || '');
     var body = text;
     var title = '';
@@ -353,6 +373,86 @@
       '<div class="caption">' + tagged(body) + '</div>' +
       (p.hashtags ? '<div class="tags">' + esc(p.hashtags) + '</div>' : '') +
     '</div>';
+  }
+
+  /* ---------- note記事 ---------- */
+
+  /* F列（キャプション）の1行目がタイトル、2行目以降が本文。YouTubeと同じ決まり。
+     本文は見出し・引用・箇条書きだけ拾う簡易Markdownとして組む。 */
+  function noteBodyHtml(p) {
+    var lines = String(p.caption || '').split('\n');
+    var title = (lines[0] || '').trim();
+    var body = lines.slice(1).join('\n').replace(/^\n+/, '');
+    var n = body.replace(/\s/g, '').length;
+
+    return '<div class="sec">' +
+      '<h3>タイトルと本文</h3>' +
+      '<div class="note-title">' + esc(title || '(タイトル未設定)') + '</div>' +
+      '<div class="note-meta">本文 約' + n + '文字</div>' +
+      '<div class="note-body">' + (n ? mdLite(body) : '<p class="empty">本文が未入力です。</p>') + '</div>' +
+      (p.hashtags ? '<div class="tags">' + esc(p.hashtags) + '</div>' : '') +
+    '</div>';
+  }
+
+  function mdLite(text) {
+    var out = [], para = [], list = null, quote = null;
+
+    function flushPara() {
+      if (para.length) { out.push('<p>' + para.join('<br>') + '</p>'); para = []; }
+    }
+    function flushList() {
+      if (list) { out.push('<ul>' + list.join('') + '</ul>'); list = null; }
+    }
+    // 連続する引用行はひとかたまりにする
+    function flushQuote() {
+      if (quote) { out.push('<blockquote>' + quote.join('<br>') + '</blockquote>'); quote = null; }
+    }
+    function flushAll() { flushPara(); flushList(); flushQuote(); }
+
+    String(text).split('\n').forEach(function (raw) {
+      var t = raw.trim();
+      var m;
+
+      if (!t) { flushAll(); return; }
+
+      if (/^(-{3,}|\*{3,}|_{3,}|―{3,}|—{3,})$/.test(t)) {
+        flushAll(); out.push('<hr>'); return;
+      }
+      if ((m = t.match(/^(#{1,6})\s*(.+)$/))) {
+        flushAll();
+        out.push('<div class="' + (m[1].length <= 2 ? 'nh2' : 'nh3') + '">' + inline(m[2]) + '</div>');
+        return;
+      }
+      if ((m = t.match(/^[>＞]\s?(.*)$/))) {
+        flushPara(); flushList();
+        if (!quote) quote = [];
+        quote.push(inline(m[1]));
+        return;
+      }
+      // 箇条書き。**強調** で始まる行を拾ってしまわないよう * は1個だけに限る
+      if ((m = t.match(/^(?:[-・]|\*(?!\*)|\d+[.)．）])\s*(.+)$/))) {
+        flushPara(); flushQuote();
+        if (!list) list = [];
+        list.push('<li>' + inline(m[1]) + '</li>');
+        return;
+      }
+
+      flushList(); flushQuote();
+      para.push(inline(t));
+    });
+
+    flushAll();
+    return out.join('');
+  }
+
+  // URLはリンクに、**強調**は太字に、#タグは色を付ける
+  function inline(s) {
+    return String(s).split(/(https?:\/\/[^\s]+)/).map(function (part, i) {
+      if (i % 2) {
+        return '<a href="' + esc(part) + '" target="_blank" rel="noopener">' + esc(part) + '</a>';
+      }
+      return tagged(part).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+    }).join('');
   }
 
   function logsHtml(p) {
