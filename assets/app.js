@@ -637,46 +637,121 @@
     cardEl.classList.toggle('done', locked(post));
   }
 
+  var sending = {};   // 送信中の投稿。二重に送らないための札
+
   function submit(id, result, comment, btn) {
     var post = postById(id);
-    if (!post) return;
+    if (!post || sending[id]) return;
+    sending[id] = true;
 
-    var label = btn.textContent;
-    var buttons = btn.closest('.decide').querySelectorAll('button');
+    var label   = btn.textContent;
+    var decide  = btn.closest('.decide');
+    var buttons = decide ? Array.prototype.slice.call(decide.querySelectorAll('button')) : [];
     buttons.forEach(function (b) { b.disabled = true; });
     btn.textContent = '送信中…';
 
-    send({ id: id, by: state.reviewer, result: result, comment: comment })
+    var payload = { id: id, by: state.reviewer, result: result, comment: comment };
+    var before  = countLogs(post.logs, payload);
+
+    send(payload)
       .then(function (res) {
-        if (!res || !res.ok) throw new Error(res && res.error ? res.error : 'failed');
+        if (res && res.ok) return res;
+        throw new Error(res && res.error ? res.error : 'failed');
+      })
+      .catch(function (err) {
+        // コメント未入力は本当のエラーなので、そのまま返す
+        if (err && err.message === 'comment_required') throw err;
 
-        post.status = result;
-        post.logs = (post.logs || []).concat([
-          { at: res.at || '', by: state.reviewer, result: result, comment: comment }
-        ]);
-        delete state.redo[id];
-        state.fixing[id] = false;
-
-        var cardEl = document.getElementById('card-' + id);
-        var badge = cardEl.querySelector('.badge');
-        if (badge) { badge.className = 'badge ' + (result === 'OK' ? 'ok' : 'fix'); badge.textContent = result; }
-
-        var oldLogs = cardEl.querySelector('.logs');
-        if (oldLogs) oldLogs.parentNode.outerHTML = logsHtml(post);
-        else cardEl.querySelector('.decide').insertAdjacentHTML('beforebegin', logsHtml(post));
-
-        refreshDecide(id);
-        renderTabs();
-        updateSummary();
+        // 返事だけ受け取れないことがある（回線の切り替わり、アプリの裏回りなど）。
+        // 記録されたかどうかを見に行き、入っていれば成功として扱う。
+        // ここを素通ししていたせいで、実際は通っているのに何度も押させてしまっていた。
+        return confirmSaved(payload, before, 0).then(function (log) {
+          if (!log) throw err;
+          return { ok: true, at: log.at };
+        });
+      })
+      .then(function (res) {
+        delete sending[id];
+        applySaved(id, result, comment, res.at);
         toast(result === 'OK' ? 'OKを送信しました' : '修正依頼を送信しました');
         goNext(id);
       })
       .catch(function (err) {
+        delete sending[id];
         buttons.forEach(function (b) { b.disabled = false; });
         btn.textContent = label;
         toast(err && err.message === 'comment_required'
           ? 'コメントを入力してください'
           : '送信できませんでした。もう一度お試しください');
+      });
+  }
+
+  /* 画面の書き換え。通信の成否とは切り離す。
+     ここで例外が出ても「送信できませんでした」とは言わない（実際は送信できている）。 */
+  function applySaved(id, result, comment, at) {
+    var post = postById(id);
+    if (!post) return;
+
+    post.status = result;
+    post.logs = (post.logs || []).concat([
+      { at: at || '', by: state.reviewer, result: result, comment: comment }
+    ]);
+    delete state.redo[id];
+    state.fixing[id] = false;
+
+    try {
+      var cardEl = document.getElementById('card-' + id);
+      if (cardEl) {
+        var badge = cardEl.querySelector('.badge');
+        if (badge) { badge.className = 'badge ' + (result === 'OK' ? 'ok' : 'fix'); badge.textContent = result; }
+
+        var oldLogs = cardEl.querySelector('.logs');
+        if (oldLogs && oldLogs.parentNode) {
+          oldLogs.parentNode.outerHTML = logsHtml(post);
+        } else {
+          var d = cardEl.querySelector('.decide');
+          if (d) d.insertAdjacentHTML('beforebegin', logsHtml(post));
+        }
+        refreshDecide(id);
+      }
+      renderTabs();
+      updateSummary();
+    } catch (e) {
+      // 画面が追いつかなくても記録は残っている。次の読み込みで正しくなる。
+    }
+  }
+
+  function countLogs(logs, payload) {
+    return (logs || []).filter(function (l) {
+      return l.by === payload.by && l.result === payload.result &&
+        String(l.comment || '').trim() === String(payload.comment || '').trim();
+    }).length;
+  }
+
+  /* 送ったものが確認ログに増えているかを見に行く。少し待ってから2回まで試す。 */
+  function confirmSaved(payload, before, tries) {
+    var wait = tries ? 2500 : 1000;
+
+    return new Promise(function (done) { setTimeout(done, wait); })
+      .then(function () {
+        var sep = C.gasUrl.indexOf('?') === -1 ? '?' : '&';
+        return fetch(C.gasUrl + sep + 'v=' + new Date().getTime()).then(function (r) { return r.json(); });
+      })
+      .then(function (data) {
+        var p    = ((data && data.posts) || []).filter(function (x) { return x.id === payload.id; })[0];
+        var logs = (p && p.logs) || [];
+
+        if (countLogs(logs, payload) > before) {
+          for (var i = logs.length - 1; i >= 0; i--) {
+            var l = logs[i];
+            if (l.by === payload.by && l.result === payload.result &&
+                String(l.comment || '').trim() === String(payload.comment || '').trim()) return l;
+          }
+        }
+        return tries < 1 ? confirmSaved(payload, before, tries + 1) : null;
+      })
+      .catch(function () {
+        return tries < 1 ? confirmSaved(payload, before, tries + 1) : null;
       });
   }
 
